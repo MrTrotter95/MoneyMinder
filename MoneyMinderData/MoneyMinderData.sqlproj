@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectVersion>4.1</ProjectVersion>
     <ProjectGuid>{af19fcce-9ba4-40e3-b91c-7228c4d601fa}</ProjectGuid>
-    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql160DatabaseSchemaProvider</DSP>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql150DatabaseSchemaProvider</DSP>
     <OutputType>Database</OutputType>
     <RootPath>
     </RootPath>
@@ -65,5 +65,6 @@
     <Build Include="PaymentFrequency.sql" />
     <Build Include="AutomaticPayment.sql" />
     <Build Include="Transaction.sql" />
+    <Build Include="HouseSaving.sql" />
   </ItemGroup>
 </Project>
