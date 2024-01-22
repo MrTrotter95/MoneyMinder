@@ -21,6 +21,7 @@ public partial class MoneyMinderDataContext : DbContext
     public virtual DbSet<AccountType> AccountTypes { get; set; }
 
     public virtual DbSet<AutomaticPayment> AutomaticPayments { get; set; }
+    public virtual DbSet<AutomaticPaymentLog> AutomaticPaymentLog { get; set; }
 
     public virtual DbSet<HouseSaving> HouseSavings { get; set; }
 
@@ -78,7 +79,7 @@ public partial class MoneyMinderDataContext : DbContext
             entity.Property(e => e.FkCategoryId).HasColumnName("FK_CategoryID");
             entity.Property(e => e.FkFrequencyId).HasColumnName("FK_FrequencyID");
             entity.Property(e => e.Name).HasMaxLength(50);
-            entity.Property(e => e.StartDate).HasColumnType("datetime");
+            entity.Property(e => e.LastPaymentDate).HasColumnType("datetime");
 
             entity.HasOne(d => d.FkAccount).WithMany(p => p.AutomaticPayments)
                 .HasForeignKey(d => d.FkAccountId)

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MoneyMinderWebAPI.DataAccessLayer.Context;
+using MoneyMinderWebAPI.DataAccessLayer.Services;
 using MoneyMinderWebAPI.DomainLayer.Models;
 
 namespace MoneyMinderWebAPI.Controllers
@@ -31,6 +27,54 @@ namespace MoneyMinderWebAPI.Controllers
           }
             return await _context.AutomaticPayments.ToListAsync();
         }
+
+        // GET: api/AutomaticPayments/DuePayments/{accountID}
+        [HttpGet("DuePayments/{accountID}")]
+        public ActionResult<IEnumerable<ExpenseToPay>> GetDueAutomaticPayments(int accountID)
+        {
+            var apService = new AutomaticPaymentService(_context); 
+            
+            var expensesToPay = apService.GetDueAutomaticPayments(accountID);
+
+            return expensesToPay;
+        }
+
+        // POST: api/AutomaticPayments/PayAutomaticPayment/{accountID}
+        [HttpPost("PayAutomaticPayment/{accountID}")]
+        public IActionResult PayAutomaticPayment(ExpenseToPay expenseToPay)
+        {
+            var apService = new AutomaticPaymentService(_context);
+            // CreateTransaction
+            var partialTransaction = apService.GenerateTransactionFromExpense(expenseToPay);
+
+            var completedTransaction = apService.DeductTransactionFromAccount(partialTransaction);
+
+            _context.Transactions.Add(completedTransaction);
+            _context.SaveChanges();
+
+            // CreateAutomaticPaymentLog
+            var automaticPaymentLog = apService.GenerateAPLogFromExpense(expenseToPay);
+            _context.AutomaticPaymentLog.Add(automaticPaymentLog);
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
+        // GET: api/AutomaticPayments/Generate/{accountID}
+        [HttpGet("UntilNextPay/{accountID}")]
+        public ActionResult<IEnumerable<ExpenseToPay>> GetAccountExpensesUntilNextPay(int accountID)
+        {
+            var apService = new AutomaticPaymentService(_context);
+
+            var now = DateTime.UtcNow;
+
+            var expensesToPay = apService.GenerateExpensesUntilNextPay(accountID, now);
+
+            return expensesToPay;
+        }
+
+
+
 
         // GET: api/AutomaticPayments/5
         [HttpGet("{id}")]
@@ -81,8 +125,6 @@ namespace MoneyMinderWebAPI.Controllers
             return NoContent();
         }
 
-        // POST: api/AutomaticPayments
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<AutomaticPayment>> PostAutomaticPayment(AutomaticPayment automaticPayment)
         {

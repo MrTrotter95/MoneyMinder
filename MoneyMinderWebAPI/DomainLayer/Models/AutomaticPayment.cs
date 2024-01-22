@@ -21,6 +21,8 @@ public partial class AutomaticPayment
 
     public DateTime? EndDate { get; set; }
 
+    public DateTime? LastPaymentDate { get; set; }
+
     public virtual Account? FkAccount { get; set; }
 
     public virtual TransactionCategory? FkCategory { get; set; }

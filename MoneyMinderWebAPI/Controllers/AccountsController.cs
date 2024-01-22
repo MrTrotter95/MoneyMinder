@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MoneyMinderWebAPI.DataAccessLayer.Context;
+using MoneyMinderWebAPI.DataAccessLayer.Services;
 using MoneyMinderWebAPI.DomainLayer.Models;
+using static MoneyMinderWebAPI.DataAccessLayer.Services.AccountService;
 
 namespace MoneyMinderWebAPI.Controllers
 {
@@ -15,10 +12,12 @@ namespace MoneyMinderWebAPI.Controllers
     public class AccountsController : ControllerBase
     {
         private readonly MoneyMinderDataContext _context;
+        private readonly IAccountService accountService;
 
-        public AccountsController(MoneyMinderDataContext context)
+        public AccountsController(MoneyMinderDataContext context, IAccountService accountService)
         {
-            _context = context;
+            this._context = context;
+            this.accountService = accountService;
         }
 
         // GET: api/Accounts
@@ -40,7 +39,29 @@ namespace MoneyMinderWebAPI.Controllers
           {
               return NotFound();
           }
+
             var account = await _context.Accounts.FindAsync(id);
+
+            if (account == null)
+            {
+                return NotFound();
+            }
+
+            return account;
+        }
+
+        // GET: api/Accounts/5
+        [HttpGet("AccountSummary/{accountID}")]
+        public async Task<ActionResult<AccountBaseViewModel>> GetAccountSummary(int accountID)
+        {
+            if (_context.Accounts == null)
+            {
+                return NotFound();
+            }
+
+            var accountService = new AccountService(_context);
+
+            var account = await accountService.GetAccountBaseViewMode(accountID);
 
             if (account == null)
             {
@@ -120,5 +141,50 @@ namespace MoneyMinderWebAPI.Controllers
         {
             return (_context.Accounts?.Any(e => e.Id == id)).GetValueOrDefault();
         }
+
+
+        // POST: api/Accounts/TransferFunds
+        [HttpPost("TransferFunds")]
+        public IActionResult TransferFunds(int senderID, int recipientID, decimal amount)
+        {
+            var senderAccount = _context.Accounts.Find(senderID);
+            var recipientAccount = _context.Accounts.Find(recipientID);
+
+            if (senderAccount == null || recipientAccount == null) { return NoContent(); }
+
+            var transferService = new AccountService(_context);
+
+            var transferTransactionLogs = transferService.TransferFunds(senderAccount, recipientAccount, amount);
+
+
+            _context.Entry(senderAccount).State = EntityState.Modified;
+            _context.Entry(recipientAccount).State = EntityState.Modified;
+            
+
+            try
+            {
+                _context.SaveChanges();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!AccountExists(senderID) || !AccountExists(recipientID))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+
+            _context.Transactions.AddRange(transferTransactionLogs);
+            _context.SaveChanges();
+
+
+            return NoContent();
+        }
+
+
     }
 }

@@ -1,3 +1,6 @@
+using MoneyMinderWebAPI.DataAccessLayer.Context;
+using MoneyMinderWebAPI.DataAccessLayer.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +9,12 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<MoneyMinderDataContext>();
+
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<AutomaticPaymentService>();
+
 
 var app = builder.Build();
 
