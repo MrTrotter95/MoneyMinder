@@ -24,30 +24,23 @@ namespace MoneyMinderWebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
         {
-          if (_context.Accounts == null)
-          {
-              return NotFound();
-          }
-            return await _context.Accounts.ToListAsync();
+            if (_context.Accounts == null)
+            {
+                return NotFound();
+            }
+            return await accountService.GetAccounts();
         }
 
         // GET: api/Accounts/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Account>> GetAccount(int id)
         {
-          if (_context.Accounts == null)
-          {
-              return NotFound();
-          }
-
-            var account = await _context.Accounts.FindAsync(id);
-
-            if (account == null)
+            if (_context.Accounts == null)
             {
                 return NotFound();
             }
 
-            return account;
+            return await accountService.GetAccount(id); ;
         }
 
         // GET: api/Accounts/5
@@ -59,9 +52,7 @@ namespace MoneyMinderWebAPI.Controllers
                 return NotFound();
             }
 
-            var accountService = new AccountService(_context);
-
-            var account = await accountService.GetAccountBaseViewMode(accountID);
+            var account = await accountService.GetAccountBaseViewModel(accountID);
 
             if (account == null)
             {
@@ -107,10 +98,10 @@ namespace MoneyMinderWebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Account>> PostAccount(Account account)
         {
-          if (_context.Accounts == null)
-          {
-              return Problem("Entity set 'MoneyMinderDataContext.Accounts'  is null.");
-          }
+            if (_context.Accounts == null)
+            {
+                return Problem("Entity set 'MoneyMinderDataContext.Accounts'  is null.");
+            }
             _context.Accounts.Add(account);
             await _context.SaveChangesAsync();
 
@@ -150,16 +141,16 @@ namespace MoneyMinderWebAPI.Controllers
             var senderAccount = _context.Accounts.Find(senderID);
             var recipientAccount = _context.Accounts.Find(recipientID);
 
-            if (senderAccount == null || recipientAccount == null) { return NoContent(); }
+            if (senderAccount == null || recipientAccount == null)
+            {
+                return NoContent();
+            }
 
-            var transferService = new AccountService(_context);
-
-            var transferTransactionLogs = transferService.TransferFunds(senderAccount, recipientAccount, amount);
-
+            var transferTransactionLogs = accountService.TransferFunds(senderAccount, recipientAccount, amount);
 
             _context.Entry(senderAccount).State = EntityState.Modified;
             _context.Entry(recipientAccount).State = EntityState.Modified;
-            
+
 
             try
             {

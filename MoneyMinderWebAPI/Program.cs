@@ -13,7 +13,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<MoneyMinderDataContext>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<AutomaticPaymentService>();
+builder.Services.AddScoped<IAutomaticPaymentService, AutomaticPaymentService>();
 
 
 var app = builder.Build();

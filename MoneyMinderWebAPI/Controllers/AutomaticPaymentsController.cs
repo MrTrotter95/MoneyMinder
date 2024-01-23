@@ -11,10 +11,12 @@ namespace MoneyMinderWebAPI.Controllers
     public class AutomaticPaymentsController : ControllerBase
     {
         private readonly MoneyMinderDataContext _context;
+        private readonly IAutomaticPaymentService _automaticPaymentService;
 
-        public AutomaticPaymentsController(MoneyMinderDataContext context)
+        public AutomaticPaymentsController(MoneyMinderDataContext context, IAutomaticPaymentService automaticPaymentService)
         {
-            _context = context;
+            this._context = context;
+            this._automaticPaymentService = automaticPaymentService;
         }
 
         // GET: api/AutomaticPayments
@@ -32,9 +34,7 @@ namespace MoneyMinderWebAPI.Controllers
         [HttpGet("DuePayments/{accountID}")]
         public ActionResult<IEnumerable<ExpenseToPay>> GetDueAutomaticPayments(int accountID)
         {
-            var apService = new AutomaticPaymentService(_context); 
-            
-            var expensesToPay = apService.GetDueAutomaticPayments(accountID);
+            var expensesToPay = _automaticPaymentService.GetDueAutomaticPayments(accountID);
 
             return expensesToPay;
         }
@@ -68,7 +68,7 @@ namespace MoneyMinderWebAPI.Controllers
 
             var now = DateTime.UtcNow;
 
-            var expensesToPay = apService.GenerateExpensesUntilNextPay(accountID, now);
+            var expensesToPay = _automaticPaymentService.GenerateExpensesUntilNextPay(accountID, now);
 
             return expensesToPay;
         }

@@ -27,7 +27,6 @@ namespace MoneyMinderWebAPI.Helpers
         {
             public const int AutomaticPayment = 1;
             public const int DD = 2;
-            public const int
         }
     }
 }

@@ -8,15 +8,13 @@ namespace MoneyMinderWebAPI.DataAccessLayer.Services
     public class AccountService : IAccountService
     {
         private readonly MoneyMinderDataContext _context;
+        private readonly IAutomaticPaymentService _automaticPaymentService;
 
-        public AccountService(MoneyMinderDataContext context)
+        public AccountService(MoneyMinderDataContext context, IAutomaticPaymentService automaticPaymentService)
         {
             _context = context;
+            _automaticPaymentService = automaticPaymentService;
         }
-
-        // Implement Interface or
-        // Implement All Members Explicitly
-        // @inject InterfaceType InterfaceName
 
         async Task<List<Account>> IAccountService.GetAccounts()
         {
@@ -24,7 +22,7 @@ namespace MoneyMinderWebAPI.DataAccessLayer.Services
 
             if (accounts.Count == 0)
             {
-                throw new Exception();
+                throw new Exception("No Accounts found");
             }
 
             return accounts;
@@ -36,29 +34,33 @@ namespace MoneyMinderWebAPI.DataAccessLayer.Services
 
             if (account == null)
             {
-                throw new Exception();
+                throw new Exception("Account not found");
             }
 
             return account;
         }
 
-        public async Task<AccountBaseViewModel> GetAccountBaseViewMode(int accountId)
+        async Task<AccountBaseViewModel> IAccountService.GetAccountBaseViewModel(int accountId)
         {
             var account = await _context.Accounts.FindAsync(accountId);
 
             if (account == null)
             {
-                throw new Exception();
+                throw new Exception("Account not found");
             }
 
-            var apService = new AutomaticPaymentService(_context);
-            var now = DateTime.UtcNow;
-
-            var expensesToPay = apService.GenerateExpensesUntilNextPay(accountId, now);
+            var expensesToPay = _automaticPaymentService.GenerateExpensesUntilNextPay(accountId, DateTime.UtcNow);
 
             var totalCost = expensesToPay.Sum(exp => exp.Amount);
 
-            var viewModel = new AccountBaseViewModel
+            var viewModel = CreateViewModel(account, totalCost);
+
+            return viewModel;
+        }
+
+        private AccountBaseViewModel CreateViewModel(Account account, decimal totalCost)
+        {
+            return new AccountBaseViewModel
             {
                 AccountId = account.Id,
                 AccountName = account.Name,
@@ -66,8 +68,6 @@ namespace MoneyMinderWebAPI.DataAccessLayer.Services
                 ExpensesUntilNextPay = totalCost,
                 Difference = account.Amount - totalCost
             };
-
-            return viewModel;
         }
 
         public class AccountBaseViewModel
@@ -80,7 +80,7 @@ namespace MoneyMinderWebAPI.DataAccessLayer.Services
         }
 
 
-        public List<Transaction> TransferFunds(Account senderAccount, Account recipientAccount, decimal amount)
+        List<Transaction> IAccountService.TransferFunds(Account senderAccount, Account recipientAccount, decimal amount)
         {
             var transferTransactionLogs = new List<Transaction>();
 

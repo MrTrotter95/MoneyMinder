@@ -5,7 +5,7 @@ using static MoneyMinderWebAPI.Helpers.Constants;
 
 namespace MoneyMinderWebAPI.DataAccessLayer.Services
 {
-    public class AutomaticPaymentService
+    public class AutomaticPaymentService : IAutomaticPaymentService
     {
         private readonly MoneyMinderDataContext _context;
 
@@ -87,7 +87,7 @@ namespace MoneyMinderWebAPI.DataAccessLayer.Services
             return expensesToPay;
         }
 
-        public List<ExpenseToPay> GenerateExpensesUntilNextPay(int accountID, DateTime nextPayDate)
+        List<ExpenseToPay> IAutomaticPaymentService.GenerateExpensesUntilNextPay(int accountID, DateTime nextPayDate)
         {
             var expenses = new List<ExpenseToPay>();
 
@@ -156,7 +156,7 @@ namespace MoneyMinderWebAPI.DataAccessLayer.Services
 
         public Transaction GenerateTransactionFromExpense(ExpenseToPay expense)
         {
-            var transaction = new Transaction()
+            return new Transaction()
             {
                 FkAccountId = expense.AccountID,
                 FkTransactionCategoryId = expense.CategoryID,
@@ -164,8 +164,6 @@ namespace MoneyMinderWebAPI.DataAccessLayer.Services
                 Description = expense.Name,
                 Amount = expense.Amount,
             };
-
-            return transaction;
         }
 
         public Transaction DeductTransactionFromAccount(Transaction transaction)

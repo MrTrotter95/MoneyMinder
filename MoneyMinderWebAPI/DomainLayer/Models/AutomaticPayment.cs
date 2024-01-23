@@ -28,4 +28,5 @@ public partial class AutomaticPayment
     public virtual TransactionCategory? FkCategory { get; set; }
 
     public virtual PaymentFrequency? FkFrequency { get; set; }
+    public virtual ICollection<AutomaticPaymentLog> AutomaticPaymentLogs { get; set; } = new List<AutomaticPaymentLog>();
 }
